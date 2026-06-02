@@ -108,7 +108,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           STUDY PACK FOR FINAL EXAM
         </span>
         <h1 className="text-3xl md:text-4xl font-sans tracking-tight font-extrabold text-slate-900 mt-4 px-4 leading-snug">
-          One site. Three chapters. All final-exam essentials.
+          netReview
         </h1>
         <p className="text-slate-500 md:text-base font-normal max-w-2xl mx-auto mt-3 leading-relaxed px-4">
           整合 Chapter 4、5、6 簡報與考古題，聚焦必考觀念、手算流程與錯題複習。
