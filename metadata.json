@@ -1,0 +1,6 @@
+{
+  "name": "[netReview]",
+  "description": "高級互動式「網路概論／Computer Networking」期末考複習＋題庫網站，涵蓋 Chapters 4, 5, and 6 獨家精緻複習大禮包與手寫題中文100分答題模板。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
