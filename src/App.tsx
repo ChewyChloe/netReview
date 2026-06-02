@@ -25,7 +25,8 @@ import {
   Flame,
   HelpCircle,
   Layers,
-  Sparkles
+  Sparkles,
+  Compass
 } from "lucide-react";
 
 export default function App() {
@@ -256,6 +257,28 @@ export default function App() {
           {activeTab === "sprint" && <StudyPlan />}
         </main>
       </div>
+
+      {/* Global Sequence Study Guide Quick-Link Assistance Button */}
+      <button
+        onClick={() => {
+          setActiveTab("home");
+          setTimeout(() => {
+            const el = document.getElementById("onboarding-guide-module");
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth" });
+              // Simulate click to trigger the overlay tour automatically
+              const guideBtn = el.querySelector("button");
+              if (guideBtn) (guideBtn as HTMLButtonElement).click();
+            }
+          }, 150);
+        }}
+        className="fixed bottom-6 right-6 p-3 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all z-40 flex items-center gap-2 cursor-pointer text-xs font-sans font-bold border border-blue-400"
+        title="開啟期末拿 100 分之複習學習指南"
+      >
+        <Compass className="h-4.5 w-4.5 animate-spin-pulse" />
+        <span className="hidden sm:inline">🧭 金牌學霸複習指南</span>
+      </button>
+
     </div>
   );
 }

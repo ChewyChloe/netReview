@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Clock, Play, Award, Zap, BookOpen, AlertTriangle, CheckCircle, ShieldAlert, Sparkles, AlertCircle, BarChart2, BookOpen as BookIcon, Clipboard } from "lucide-react";
 import { QUIZ_BANK } from "../data/quizBank";
+import { UserGuide } from "./UserGuide";
 
 interface HomeDashboardProps {
   onNavigate: (tab: string) => void;
@@ -114,6 +115,9 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           整合 Chapter 4、5、6 簡報與考古題，聚焦必考觀念、手算流程與錯題複習。
         </p>
       </div>
+
+      {/* Recommended Interactive Golden Sequence Guide Tour */}
+      <UserGuide onNavigate={onNavigate} currentTab="home" />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Countdown Timer card */}
