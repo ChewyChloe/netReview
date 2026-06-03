@@ -976,13 +976,13 @@ export const ConceptMap: React.FC = () => {
               <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200 shadow-xxs">
                 <span className="text-xxs font-sans font-bold text-slate-500 uppercase tracking-wider block">IP 位址（32位元 / 128位元）</span>
                 <p className="text-xs text-slate-700 font-sans mt-1.5 leading-relaxed">
-                  **階層式結構**（如同郵遞區號），不具備可攜性。身為邏輯定址，標誌封包的**端到端（End-to-End）**原點與終點，漫長通訊旅程中**雷打不動、始終如一**（NAT 映射為唯一例外）。
+                  <strong className="text-blue-900 font-bold">階層式結構</strong>（如同郵遞區號），不具備可攜性。身為邏輯定址，標誌封包的<strong className="text-blue-900 font-bold">端到端（End-to-End）</strong>原點與終點，漫長通訊旅程中<strong className="text-blue-900 font-bold">雷打不動、始終如一</strong>（NAT 映射為唯一例外）。
                 </p>
               </div>
               <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200 shadow-xxs">
                 <span className="text-xxs font-sans font-bold text-slate-500 uppercase tracking-wider block">MAC 位址（48位元）</span>
                 <p className="text-xs text-slate-700 font-sans mt-1.5 leading-relaxed">
-                  **平面型結構**（如同你的身分證號），具有永久可攜性。出廠時固化在硬體 NIC ROM 中，標誌**單一局域子網物理段（Hop-by-Hop）**的近鄰轉移。透過 L3 路由器時，外包裝 MAC 訊框會**遭扒除並重新封寫為下一站的 MAC**。
+                  <strong className="text-blue-900 font-bold">平面型結構</strong>（如同你的身分證號），具有永久可攜性。出廠時固化在硬體 NIC ROM 中，標誌<strong className="text-blue-900 font-bold">單一局域子網物理段（Hop-by-Hop）</strong>的近鄰轉移。透過 L3 路由器時，外包裝 MAC 訊框會<strong className="text-blue-900 font-bold">遭扒除並重新封寫為下一站的 MAC</strong>。
                 </p>
               </div>
             </div>
@@ -999,13 +999,13 @@ export const ConceptMap: React.FC = () => {
               <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200 shadow-xxs">
                 <span className="text-xxs font-sans font-bold text-slate-500 uppercase tracking-wider block">路由器 Router（運作於 Layer 3）</span>
                 <p className="text-xs text-slate-700 font-sans mt-1.5 leading-relaxed">
-                  完全根據 **IP 首部** 來做決定。擁有 Forwarding Table，負責**隔離廣播網域**、跨子網算路、並以硬體規格做最長前綴匹配（LPM）。
+                  完全根據 <strong className="text-blue-900 font-bold">IP 首部</strong> 來做決定。擁有 Forwarding Table，負責<strong className="text-blue-900 font-bold">隔離廣播網域</strong>、跨子網算路、並以硬體規格做最長前綴匹配（LPM）。
                 </p>
               </div>
               <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200 shadow-xxs">
                 <span className="text-xxs font-sans font-bold text-slate-500 uppercase tracking-wider block">交換器 Switch（運作於 Layer 2）</span>
                 <p className="text-xs text-slate-700 font-sans mt-1.5 leading-relaxed">
-                  完全根據 **MAC 幀首部** 來做決定。依靠 Switch Table 快取。具備**自學機制 (Self-Learning)**。通常不隔離廣播網域（除非額外配置 Port-based VLAN 進行 traffic isolation），只負責同子網內的過濾、轉發或氾洪（Flooding）。
+                  完全根據 <strong className="text-blue-900 font-bold">MAC 幀首部</strong> 來做決定。依靠 Switch Table 快取。具備<strong className="text-blue-900 font-bold">自學機制 (Self-Learning)</strong>。通常不隔離廣播網域（除非額外配置 Port-based VLAN 進行 traffic isolation），只負責同子網內的過濾、轉發或氾洪（Flooding）。
                 </p>
               </div>
             </div>
@@ -1020,7 +1020,7 @@ export const ConceptMap: React.FC = () => {
             
             <div className="space-y-3.5">
               <p className="text-xs sm:text-sm text-slate-700 font-sans leading-relaxed font-semibold">
-                ARP 協定扮演了 L3 邏輯層往 L2 物理層著陸轉換的最底層樞紐。它擁有在本地子網內，**將 (IP 地址) 動態轉譯快取為 (MAC 地址)** 的重大職責：
+                ARP 協定扮演了 L3 邏輯層往 L2 物理層著陸轉換的最底層樞紐。它擁有在本地子網內，<strong className="text-blue-950 font-extrabold">將 (IP 地址) 動態轉譯快取為 (MAC 地址)</strong> 的重大職責：
               </p>
               <ul className="space-y-2 font-sans text-xs text-slate-650 list-disc list-inside">
                 <li><strong className="text-blue-800">ARP Request (廣播)</strong>：在暗處吹口哨。填寫 `FF-FF-FF-FF-FF-FF` 物理廣播位，全子網網卡都將強制收悉解析。</li>
@@ -1041,13 +1041,13 @@ export const ConceptMap: React.FC = () => {
               <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200 shadow-xxs">
                 <span className="text-xxs font-sans font-bold text-slate-500 uppercase tracking-wider block">OSPF (域內最短優先：Intra-AS)</span>
                 <p className="text-xs text-slate-700 font-sans mt-1.5 leading-relaxed">
-                  **專注效能與代價**：在同一自治系統內部運作。主要追求：least cost、fastest 路徑。全網所有路由器維護相同拓撲，跑 Dijkstra SPF。
+                  <strong className="text-blue-900 font-bold">專注效能與代價</strong>：在同一自治系統內部運作。主要追求：least cost、fastest 路徑。全網所有路由器維護相同拓撲，跑 Dijkstra SPF。
                 </p>
               </div>
               <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200 shadow-xxs">
                 <span className="text-xxs font-sans font-bold text-slate-500 uppercase tracking-wider block">BGP (自治域邊界：Inter-AS)</span>
                 <p className="text-xs text-slate-700 font-sans mt-1.5 leading-relaxed">
-                  **專注路由決策與商業政策**：跨 AS 的外交協定（BGP session directly over TCP 179）。首要驅動力不是「哪條路徑物理代價小」，而是「**這條通道是否違反我國的商業、安全排他政策 (Policy-based)**」。因此 Local Preference 本地優先級大於一切。
+                  <strong className="text-blue-900 font-bold">專注路由決策與商業政策</strong>：跨 AS 的外交協定（BGP session directly over TCP 179）。首要驅動力不是「哪條路徑物理代價小」，而是「<strong className="text-blue-900 font-bold">這條通道是否違反我國的商業、安全排他政策 (Policy-based)</strong>」。因此 Local Preference 本地優先級大於一切。
                 </p>
               </div>
             </div>

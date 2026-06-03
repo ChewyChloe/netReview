@@ -19,22 +19,154 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
 
   const activeChapterData = CHAPTER_REVIEW_DATA.find((ch) => ch.id === selectedChapter);
 
-  // Parse text searching for \( ... \) blocks and render them live as Latex components
-  const renderTextWithMath = (text: string) => {
+  // Helper to parse bold and italic within text
+  const parseBoldAndItalic = (text: string) => {
     if (!text) return "";
-    const parts = text.split(/(\\\([\s\S]*?\\\)|\$\$[\s\S]*?\$\$)/g);
-
-    return parts.map((part, idx) => {
-      if (part.startsWith("\\(") && part.endsWith("\\)")) {
-        const math = part.slice(2, -2);
-        return <LatexRenderer key={idx} math={math} block={false} />;
+    
+    // Split on bold chunks first: **bold**
+    const boldParts = text.split(/(\*\*[\s\S]*?\*\*)/g);
+    
+    return boldParts.map((bPart, bIdx) => {
+      if (bPart.startsWith("**") && bPart.endsWith("**")) {
+        const boldText = bPart.slice(2, -2);
+        return (
+          <strong key={bIdx} className="font-extrabold text-slate-950 font-sans">
+            {parseItalic(boldText)}
+          </strong>
+        );
       }
-      if (part.startsWith("$$") && part.endsWith("$$")) {
-        const math = part.slice(2, -2);
-        return <LatexRenderer key={part + idx} math={math} block={true} />;
-      }
-      return <span key={idx} className="whitespace-pre-line leading-relaxed text-slate-700 font-sans">{part}</span>;
+      return <React.Fragment key={bIdx}>{parseItalic(bPart)}</React.Fragment>;
     });
+  };
+
+  const parseItalic = (text: string) => {
+    if (!text) return "";
+    
+    // Split on italic chunks: *italic* or _italic_
+    const italicParts = text.split(/(\*[\s\S]*?\*)/g);
+    
+    return italicParts.map((iPart, iIdx) => {
+      if (iPart.startsWith("*") && iPart.endsWith("*")) {
+        const italicText = iPart.slice(1, -1);
+        return (
+          <em key={iIdx} className="italic text-slate-800 font-sans">
+            {italicText}
+          </em>
+        );
+      }
+      return iPart;
+    });
+  };
+
+  // Helper to parse inline LaTeX and regular text with nested bold/italic
+  const parseInlineMathAndMarkdown = (text: string) => {
+    if (!text) return null;
+    
+    // Split on math expressions: \(...\), $$...$$, $...$
+    const parts = text.split(/(\\\([\s\S]*?\\\)|\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
+    
+    return (
+      <>
+        {parts.map((part, idx) => {
+          if (part.startsWith("$$") && part.endsWith("$$")) {
+            const math = part.slice(2, -2);
+            return <LatexRenderer key={idx} math={math} block={true} />;
+          }
+          if (part.startsWith("\\(") && part.endsWith("\\)")) {
+            const math = part.slice(2, -2);
+            return <LatexRenderer key={idx} math={math} block={false} />;
+          }
+          if (part.startsWith("$") && part.endsWith("$") && part.length > 2) {
+            const math = part.slice(1, -1);
+            return <LatexRenderer key={idx} math={math} block={false} />;
+          }
+          return <span key={idx}>{parseBoldAndItalic(part)}</span>;
+        })}
+      </>
+    );
+  };
+
+  // Main Markdown list and block parser
+  const renderMarkdown = (markdown: string) => {
+    if (!markdown) return null;
+    
+    const lines = markdown.split("\n");
+    
+    return (
+      <div className="space-y-3.5 text-slate-700 text-[13.5px] leading-relaxed font-sans mt-2">
+        {lines.map((line, lineIdx) => {
+          // Empty spacing line
+          if (line.trim() === "") {
+            return <div key={lineIdx} className="h-1.5" />;
+          }
+          
+          // 1. Headings (### or ## or #)
+          const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+          if (headingMatch) {
+            const level = headingMatch[1].length;
+            const content = headingMatch[2];
+            
+            if (level === 1) {
+              return (
+                <h1 key={lineIdx} className="text-xl sm:text-2xl font-extrabold text-slate-950 mt-6 mb-3 border-b border-slate-200 pb-2">
+                  {parseInlineMathAndMarkdown(content)}
+                </h1>
+              );
+            } else if (level === 2) {
+              return (
+                <h2 key={lineIdx} className="text-lg sm:text-xl font-extrabold text-slate-900 mt-5 mb-2.5">
+                  {parseInlineMathAndMarkdown(content)}
+                </h2>
+              );
+            } else {
+              return (
+                <h3 key={lineIdx} className="text-sm sm:text-base font-black text-blue-900 mt-4 mb-2 flex items-center gap-1.5 border-l-4 border-blue-500 pl-2.5 bg-blue-50/40 py-1 rounded-r-lg">
+                  {parseInlineMathAndMarkdown(content)}
+                </h3>
+              );
+            }
+          }
+          
+          // 2. Bullet lists (e.g. * or - with optional spaces)
+          const bulletMatch = line.match(/^(\s*)([\*\-])\s+(.*)$/);
+          if (bulletMatch) {
+            const spaces = bulletMatch[1].length;
+            const content = bulletMatch[3];
+            const plClass = spaces >= 8 ? "pl-8" : spaces >= 4 ? "pl-5" : "pl-1.5";
+            
+            return (
+              <div key={lineIdx} className={`flex items-start gap-2.5 ${plClass} py-0.5`}>
+                <span className="text-blue-505 text-blue-500 shrink-0 select-none mt-1 text-[11px]">✦</span>
+                <span className="text-slate-700">{parseInlineMathAndMarkdown(content)}</span>
+              </div>
+            );
+          }
+          
+          // 3. Numbered lists
+          const numMatch = line.match(/^(\s*)(\d+)\.\s+(.*)$/);
+          if (numMatch) {
+            const spaces = numMatch[1].length;
+            const num = numMatch[2];
+            const content = numMatch[3];
+            const plClass = spaces >= 8 ? "pl-8" : spaces >= 4 ? "pl-5" : "pl-1.5";
+            
+            return (
+              <div key={lineIdx} className={`flex items-start gap-2.5 ${plClass} py-0.5`}>
+                <span className="text-blue-700 font-mono font-bold shrink-0 select-none text-[12px]">{num}.</span>
+                <span className="text-slate-700">{parseInlineMathAndMarkdown(content)}</span>
+              </div>
+            );
+          }
+          
+          // 4. Defaults
+          return (
+            <p key={lineIdx} className="text-slate-700 leading-relaxed pl-1">
+              {parseInlineMathAndMarkdown(line)}
+            </p>
+          );
+        })}
+      </div>
+    );
   };
 
   const filteredConcepts = (activeChapterData?.concepts || []).filter((concept) => {
@@ -192,7 +324,7 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
 
                 {/* Concept Main Content Body */}
                 <div className="max-w-none text-slate-700 text-sm leading-relaxed space-y-4 font-sans prose prose-slate">
-                  {renderTextWithMath(concept.contentMarkdown)}
+                  {renderMarkdown(concept.contentMarkdown)}
                 </div>
               </div>
             );

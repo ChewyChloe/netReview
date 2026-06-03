@@ -44,10 +44,26 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
     }
   }, [mistakesList]);
 
+  const parseBold = (str: string) => {
+    if (!str) return "";
+    const subParts = str.split(/(\*\*[\s\S]*?\*\*)/g);
+    return subParts.map((sub, sIdx) => {
+      if (sub.startsWith("**") && sub.endsWith("**")) {
+        const boldVal = sub.slice(2, -2);
+        return (
+          <strong key={sIdx} className="font-extrabold text-slate-950 font-sans">
+            {boldVal}
+          </strong>
+        );
+      }
+      return sub;
+    });
+  };
+
   // Parse text looking for LaTeX \( ... \) blocks and replace them dynamically
   const parseTex = (text: string) => {
     if (!text) return "";
-    const parts = text.split(/(\\\([\s\S]*?\\\)|\$\$[\s\S]*?\$\$)/g);
+    const parts = text.split(/(\\\([\s\S]*?\\\)|\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
     return parts.map((part, idx) => {
       if (part.startsWith("\\(") && part.endsWith("\\)")) {
         const math = part.slice(2, -2);
@@ -57,7 +73,11 @@ export const QuizSection: React.FC<QuizSectionProps> = ({
         const math = part.slice(2, -2);
         return <LatexRenderer key={part + idx} math={math} block={true} />;
       }
-      return <span key={idx} className="font-sans text-slate-800">{part}</span>;
+      if (part.startsWith("$") && part.endsWith("$") && part.length > 2) {
+        const math = part.slice(1, -1);
+        return <LatexRenderer key={idx} math={math} block={false} />;
+      }
+      return <span key={idx} className="font-sans text-slate-800">{parseBold(part)}</span>;
     });
   };
 
