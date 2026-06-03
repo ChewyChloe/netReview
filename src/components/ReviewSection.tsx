@@ -86,84 +86,259 @@ export const ReviewSection: React.FC<ReviewSectionProps> = ({
     );
   };
 
+  // Parser for Table cells and alignment
+  const parseTableRow = (line: string): string[] => {
+    const trimmed = line.trim();
+    let content = trimmed;
+    if (content.startsWith("|")) content = content.slice(1);
+    if (content.endsWith("|")) content = content.slice(0, -1);
+    return content.split("|").map(cell => cell.trim());
+  };
+
+  const getAlignments = (separatorRow: string): ("left" | "center" | "right")[] => {
+    const cells = parseTableRow(separatorRow);
+    return cells.map(cell => {
+      const trimmed = cell.trim();
+      const starts = trimmed.startsWith(":");
+      const ends = trimmed.endsWith(":");
+      if (starts && ends) return "center";
+      if (ends) return "right";
+      return "left";
+    });
+  };
+
   // Main Markdown list and block parser
   const renderMarkdown = (markdown: string) => {
     if (!markdown) return null;
-    
+
+    type BlockType = "paragraph" | "heading" | "bullet-list" | "numbered-list" | "table" | "empty";
+    interface Block {
+      type: BlockType;
+      lines: string[];
+    }
+
     const lines = markdown.split("\n");
+    const blocks: Block[] = [];
     
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      
+      // 1. Empty line
+      if (trimmed === "") {
+        blocks.push({ type: "empty", lines: [line] });
+        continue;
+      }
+      
+      // 2. Heading
+      if (trimmed.startsWith("#")) {
+        blocks.push({ type: "heading", lines: [line] });
+        continue;
+      }
+      
+      // 3. Table line
+      if (trimmed.startsWith("|")) {
+        if (blocks.length > 0 && blocks[blocks.length - 1].type === "table") {
+          blocks[blocks.length - 1].lines.push(line);
+        } else {
+          blocks.push({ type: "table", lines: [line] });
+        }
+        continue;
+      }
+      
+      // 4. Bullet list
+      if (/^\s*[\*\-]\s+/.test(line)) {
+        if (blocks.length > 0 && blocks[blocks.length - 1].type === "bullet-list") {
+          blocks[blocks.length - 1].lines.push(line);
+        } else {
+          blocks.push({ type: "bullet-list", lines: [line] });
+        }
+        continue;
+      }
+      
+      // 5. Numbered list
+      if (/^\s*\d+\.\s+/.test(line)) {
+        if (blocks.length > 0 && blocks[blocks.length - 1].type === "numbered-list") {
+          blocks[blocks.length - 1].lines.push(line);
+        } else {
+          blocks.push({ type: "numbered-list", lines: [line] });
+        }
+        continue;
+      }
+      
+      // 6. Generic Paragraph line
+      if (blocks.length > 0 && blocks[blocks.length - 1].type === "paragraph") {
+        blocks[blocks.length - 1].lines.push(line);
+      } else {
+        blocks.push({ type: "paragraph", lines: [line] });
+      }
+    }
+
     return (
-      <div className="space-y-3.5 text-slate-700 text-[13.5px] leading-relaxed font-sans mt-2">
-        {lines.map((line, lineIdx) => {
-          // Empty spacing line
-          if (line.trim() === "") {
-            return <div key={lineIdx} className="h-1.5" />;
+      <div className="space-y-4 text-slate-705 text-[13.5px] leading-relaxed font-sans mt-2">
+        {blocks.map((block, blockIdx) => {
+          // A. Headings
+          if (block.type === "heading") {
+            return block.lines.map((line, lineIdx) => {
+              const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+              if (!headingMatch) return null;
+              const level = headingMatch[1].length;
+              const content = headingMatch[2];
+              
+              if (level === 1) {
+                return (
+                  <h1 key={`${blockIdx}-${lineIdx}`} className="text-xl sm:text-2xl font-extrabold text-slate-950 mt-6 mb-3 border-b border-slate-200 pb-2">
+                    {parseInlineMathAndMarkdown(content)}
+                  </h1>
+                );
+              } else if (level === 2) {
+                return (
+                  <h2 key={`${blockIdx}-${lineIdx}`} className="text-lg sm:text-xl font-extrabold text-slate-900 mt-5 mb-2.5">
+                    {parseInlineMathAndMarkdown(content)}
+                  </h2>
+                );
+              } else {
+                return (
+                  <h3 key={`${blockIdx}-${lineIdx}`} className="text-sm sm:text-base font-black text-blue-900 mt-4 mb-2 flex items-center gap-1.5 border-l-4 border-blue-500 pl-2.5 bg-blue-50/40 py-1 rounded-r-lg">
+                    {parseInlineMathAndMarkdown(content)}
+                  </h3>
+                );
+              }
+            });
           }
-          
-          // 1. Headings (### or ## or #)
-          const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
-          if (headingMatch) {
-            const level = headingMatch[1].length;
-            const content = headingMatch[2];
+
+          // B. Bullet Lists
+          if (block.type === "bullet-list") {
+            return (
+              <ul key={blockIdx} className="space-y-1.5 my-2.5 pl-1.5 list-none">
+                {block.lines.map((line, lineIdx) => {
+                  const bulletMatch = line.match(/^(\s*)([\*\-])\s+(.*)$/);
+                  if (!bulletMatch) return null;
+                  const spaces = bulletMatch[1].length;
+                  const content = bulletMatch[3];
+                  const plClass = spaces >= 8 ? "pl-8" : spaces >= 4 ? "pl-4" : "pl-0";
+                  return (
+                    <li key={lineIdx} className={`flex items-start gap-2.5 ${plClass} py-0.5`}>
+                      <span className="text-blue-500 shrink-0 select-none mt-1.5 text-[10px]">✦</span>
+                      <span className="text-slate-700 font-sans leading-relaxed text-[13.5px]">
+                        {parseInlineMathAndMarkdown(content)}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            );
+          }
+
+          // C. Numbered Lists
+          if (block.type === "numbered-list") {
+            return (
+              <ol key={blockIdx} className="space-y-1.5 my-2.5 pl-1.5 list-none">
+                {block.lines.map((line, lineIdx) => {
+                  const numMatch = line.match(/^(\s*)(\d+)\.\s+(.*)$/);
+                  if (!numMatch) return null;
+                  const spaces = numMatch[1].length;
+                  const num = numMatch[2];
+                  const content = numMatch[3];
+                  const plClass = spaces >= 8 ? "pl-8" : spaces >= 4 ? "pl-4" : "pl-0";
+                  return (
+                    <li key={lineIdx} className={`flex items-start gap-2.5 ${plClass} py-0.5`}>
+                      <span className="text-blue-600 font-mono font-extrabold shrink-0 select-none text-[12px] min-w-[18px] text-right">
+                        {num}.
+                      </span>
+                      <span className="text-slate-700 font-sans leading-relaxed text-[13.5px]">
+                        {parseInlineMathAndMarkdown(content)}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+            );
+          }
+
+          // D. Tables
+          if (block.type === "table") {
+            const rawRows = block.lines;
+            if (rawRows.length === 0) return null;
             
-            if (level === 1) {
-              return (
-                <h1 key={lineIdx} className="text-xl sm:text-2xl font-extrabold text-slate-950 mt-6 mb-3 border-b border-slate-200 pb-2">
-                  {parseInlineMathAndMarkdown(content)}
-                </h1>
-              );
-            } else if (level === 2) {
-              return (
-                <h2 key={lineIdx} className="text-lg sm:text-xl font-extrabold text-slate-900 mt-5 mb-2.5">
-                  {parseInlineMathAndMarkdown(content)}
-                </h2>
-              );
-            } else {
-              return (
-                <h3 key={lineIdx} className="text-sm sm:text-base font-black text-blue-900 mt-4 mb-2 flex items-center gap-1.5 border-l-4 border-blue-500 pl-2.5 bg-blue-50/40 py-1 rounded-r-lg">
-                  {parseInlineMathAndMarkdown(content)}
-                </h3>
-              );
+            const headerRow = rawRows[0];
+            const headers = parseTableRow(headerRow);
+            
+            let alignments: ("left" | "center" | "right")[] = [];
+            let startBodyIdx = 1;
+            
+            if (rawRows.length > 1) {
+              const secondRow = rawRows[1].trim();
+              const isSeparator = /^[\|:\-\s]+$/.test(secondRow);
+              if (isSeparator) {
+                alignments = getAlignments(rawRows[1]);
+                startBodyIdx = 2;
+              }
             }
-          }
-          
-          // 2. Bullet lists (e.g. * or - with optional spaces)
-          const bulletMatch = line.match(/^(\s*)([\*\-])\s+(.*)$/);
-          if (bulletMatch) {
-            const spaces = bulletMatch[1].length;
-            const content = bulletMatch[3];
-            const plClass = spaces >= 8 ? "pl-8" : spaces >= 4 ? "pl-5" : "pl-1.5";
+            
+            const bodyRows: string[][] = [];
+            for (let r = startBodyIdx; r < rawRows.length; r++) {
+              bodyRows.push(parseTableRow(rawRows[r]));
+            }
             
             return (
-              <div key={lineIdx} className={`flex items-start gap-2.5 ${plClass} py-0.5`}>
-                <span className="text-blue-505 text-blue-500 shrink-0 select-none mt-1 text-[11px]">✦</span>
-                <span className="text-slate-700">{parseInlineMathAndMarkdown(content)}</span>
+              <div key={blockIdx} className="overflow-x-auto w-full border border-slate-205 border-slate-200 rounded-2xl my-4 bg-white/70 shadow-xxs">
+                <table className="min-w-full divide-y divide-slate-200 text-slate-800 border-collapse">
+                  <thead className="bg-slate-50/75">
+                    <tr>
+                      {headers.map((header, colIdx) => (
+                        <th
+                          key={colIdx}
+                          className="px-4 py-3 text-[13px] font-extrabold text-slate-900 border-b border-slate-200 bg-slate-50"
+                          style={{ textAlign: alignments[colIdx] || "left" }}
+                        >
+                          {parseInlineMathAndMarkdown(header)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {bodyRows.map((rowCells, rowIdx) => (
+                      <tr key={rowIdx} className="hover:bg-slate-50/40 transition-colors">
+                        {rowCells.map((cell, colIdx) => (
+                          <td
+                            key={colIdx}
+                            className="px-4 py-2.5 text-[13px] text-slate-700 leading-relaxed font-sans"
+                            style={{ textAlign: alignments[colIdx] || "left" }}
+                          >
+                            {parseInlineMathAndMarkdown(cell)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             );
           }
-          
-          // 3. Numbered lists
-          const numMatch = line.match(/^(\s*)(\d+)\.\s+(.*)$/);
-          if (numMatch) {
-            const spaces = numMatch[1].length;
-            const num = numMatch[2];
-            const content = numMatch[3];
-            const plClass = spaces >= 8 ? "pl-8" : spaces >= 4 ? "pl-5" : "pl-1.5";
-            
+
+          // E. Paragraph Blocks
+          if (block.type === "paragraph") {
             return (
-              <div key={lineIdx} className={`flex items-start gap-2.5 ${plClass} py-0.5`}>
-                <span className="text-blue-700 font-mono font-bold shrink-0 select-none text-[12px]">{num}.</span>
-                <span className="text-slate-700">{parseInlineMathAndMarkdown(content)}</span>
+              <div key={blockIdx} className="space-y-2">
+                {block.lines.map((line, lineIdx) => {
+                  const trimmed = line.trim();
+                  if (trimmed.startsWith("$$") && trimmed.endsWith("$$")) {
+                    const math = trimmed.slice(2, -2).trim();
+                    return <LatexRenderer key={lineIdx} math={math} block={true} />;
+                  }
+                  return (
+                    <p key={lineIdx} className="text-slate-700 leading-relaxed pl-0.5">
+                      {parseInlineMathAndMarkdown(line)}
+                    </p>
+                  );
+                })}
               </div>
             );
           }
-          
-          // 4. Defaults
-          return (
-            <p key={lineIdx} className="text-slate-700 leading-relaxed pl-1">
-              {parseInlineMathAndMarkdown(line)}
-            </p>
-          );
+
+          // F. Empty spaces
+          return <div key={blockIdx} className="h-1.5" />;
         })}
       </div>
     );
