@@ -1354,30 +1354,5 @@ export const QUIZ_BANK: Question[] = [
         "D": "錯誤，同交換器內不同埠，直接在二層 Trunk 接應區隔轉發，不需要特意上發至三層 Router 繞路耗能。"
       }
     }
-  },
-  {
-    id: "q62",
-    chapter: ChapterId.CH6,
-    type: QuestionType.MCQ,
-    difficulty: Difficulty.MEDIUM,
-    topic: "Datacenter Load Balancer",
-    questionText: "What is the primary role of an Application-Layer Load Balancer situated inside a large-scale modern Datacenter?",
-    options: [
-      "(A) To backup all routing engine codes into local micro-SD disks",
-      "(B) To distribute incoming web request flows evenly to pool servers based on application content, managing session state gracefully",
-      "(C) To encrypt the fiber optics to guarantee data privacy",
-      "(D) To convert Ethernet frames directly into wireless cellular packets"
-    ],
-    correctAnswer: "B",
-    explanation: {
-      concept: "資料中心專用負載均衡器（Load Balancer / Reverse Proxy）的工作任務。",
-      reviewRef: "對應：Ch6 Page 65 'Datacenter Networks'。 將單一門戶 VIP 的請求分流給後端龐大實體主機池，實施 L4/L7 分流。",
-      optionsAnalysis: {
-        "A": "錯誤，路由器日常备份與負載分流毫無關聯。",
-        "B": "正確，負載均衡器（Load Balancer）站在大前門，多路分流 Web Request（如 HTTP header 規則、輪詢或最小連線法），優化後端百萬伺服器吞吐，保證高可用度。",
-        "C": "錯誤，資料私鑰常由特定 SSL / TLS 機制實施終點解碼，不歸 LB 計算面獨享。",
-        "D": "錯誤，物理電訊不作無線對接口徑轉換。"
-      }
-    }
   }
 ];

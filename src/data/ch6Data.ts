@@ -227,31 +227,6 @@ Layer 2 區域網路交換器（Switch）是一種對終端主機完全透明、
 ### ✍️ 老師眼中的奪分關鍵（背誦提示）
 * **VLAN 的硬性隔離防線**：不同 VLAN 之間在 Layer 2 互不相通（連 ARP 廣播都過不去）。要互通**必須跨越 Layer 3 設備**（Router 或 L3 Switch）。
 * **IEEE 802.1Q 幹線運作**：在 Trunk 線路傳輸時會**插上 4 bytes 的 Tag**，裡面的 **VLAN ID 佔 12 位元**（所以最多支援 $2^{12} = 4096$ 個 VLAN）。封包進到一般主機前會被**剝除（Strip）**。`
-    },
-    {
-      id: "ch6-datacenter",
-      title: "10. Datacenter Networks: 資料中心 bento 網路互連",
-      isHighFreq: false,
-      isMustKnow: true,
-      isWarning: false,
-      contentMarkdown: `### 內部拓撲架構
-現代資料中心網路（Datacenter Network）包含了成千上萬個伺服器（Blade hosts），需要極高的吞吐量和冗餘：
-* **伺服器機櫃（Server Racks）**：每一機櫃插入數十台伺服器。
-* **櫃頂交換器（Top of Rack Switch, TOR Switch）**：掛在每一機櫃頂部，連接所有內部伺服器板。
-* **多級開關階層（Tier-2 & Tier-1 Switches）**：櫃頂交換器向上接入多台 Tier-2 交換器，Tier-2 再向上匯聚至 Tier-1 核心骨幹交換器與邊界路由器（Border Routers），進而連向網際網路骨幹。
-
-### 資料中心三大應戰神兵
-1. **多路徑轉發（Multipath Forwarding）**：在各級交換器之間配置對稱的備份物理互連開關，消除單一實體故障並提供倍增頻寬。
-2. **負載平衡器（Load Balancer / L7 Switch）**：對外暴露單一公網 IP，將外界成千上萬的動態請求，代理配送到內部當前資源充裕的某個實體伺服器。
-3. **高通量高可靠（High Throughput & Reliability）**。
-
-### 💯 100分申論題答題模板（手寫專用）
-現代資料中心網路（Datacenter Networks）架構的設計核心，在於解決海量伺服器之間的高吞吐量通訊（東西向流量）與對外網服務的高可用性（南北向流量）。其拓撲採用多級交換階層（Multi-tier Topology），由伺服器機櫃向上匯聚至櫃頂交換器（TOR Switch），再進一步接入 Tier-2 與 Tier-1 核心骨幹交換器。為了克服單點故障（Single Point of Failure）並因應突發的洪峰流量，資料中心引入了兩大核心技術：第一是「多路徑轉發（Multipath Forwarding）」，透過在各級交換器之間佈署大量對稱的備份實體鏈路，當某條線路擁塞或損壞時，流量能自發分流至其他平行通路，實現高速橫向擴展與容錯；第二是「負載平衡器（Load Balancer）」，它對外隱藏內部真實的伺服器群 IP，僅暴露單一虛擬公網 IP，並在第七層（應用層）動態解析請求，依據各節點的即時資源狀態進行精密配送。這項設計不僅優化了集群的資源利用率，更保證了雲端服務不中斷的高可靠性。
-
-### ✍️ 老師眼中的奪分關鍵（背誦提示）
-* **多級拓撲的結構流向**：伺服器 $\rightarrow$ TOR (櫃頂交換器) $\rightarrow$ Tier-2 $\rightarrow$ Tier-1 / Border Router。
-* **多路徑轉發（Multipath Forwarding）的價值**：提供冗餘（Redundancy），消滅單點故障，允許並行流量動態分流，大幅優化內部機櫃間的東西向高頻流量。
-* **負載平衡器（Load Balancer）的角色**：屬於第七層（L7）的高級交換設備，對外提供統一虛擬 IP 作為單一門面，對內進行智慧型任務均勻分配。`
     }
   ]
 };
